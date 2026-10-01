@@ -79,6 +79,17 @@ final class DoctorCommand extends Command
 
     private function reportWebhooks(Client $sendseven, Config $config, WebhookSecretResolver $secrets, Router $router): void
     {
+        $router->getRoutes()->refreshNameLookups();
+        $route = $router->getRoutes()->getByName('sendseven.webhooks');
+
+        // Apps that receive webhooks on their own routes keep their own
+        // secrets, so there is nothing of this package's to check.
+        if ($route === null) {
+            $this->components->twoColumnDetail('Webhook route', 'not registered: Route::sendSevenWebhooks() handles webhooks for you; skip this if your app has its own');
+
+            return;
+        }
+
         $secret = $config->get('sendseven.webhooks.secret');
 
         if ($secrets->hasCustomResolver()) {
@@ -87,15 +98,6 @@ final class DoctorCommand extends Command
             $this->passed('Webhook secret', 'configured');
         } else {
             $this->failed('Webhook secret', 'missing: run php artisan sendseven:webhooks:register, or set SENDSEVEN_WEBHOOK_SECRET');
-        }
-
-        $router->getRoutes()->refreshNameLookups();
-        $route = $router->getRoutes()->getByName('sendseven.webhooks');
-
-        if ($route === null) {
-            $this->warn('  No webhook route. Add Route::sendSevenWebhooks() to routes/web.php to receive messages and delivery updates.');
-
-            return;
         }
 
         $endpoints = $sendseven->webhooks()->listEndpoints();

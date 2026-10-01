@@ -2,6 +2,10 @@
 
 All notable changes to `reshapify/sendseven-laravel` are documented here.
 
+## 0.1.1 - 2026-10-01
+
+- `sendseven:doctor` no longer fails on a missing webhook secret when the app doesn't use `Route::sendSevenWebhooks()` and handles webhooks itself.
+
 ## 0.1.0 - 2026-10-01
 
 - Requests go through Laravel's HTTP client, so `Http::fake()`, `Http::preventStrayRequests()` and Telescope see them.

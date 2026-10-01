@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Route;
 use Reshapify\SendSeven\Http\Request;
 use Reshapify\SendSeven\Http\Response;
@@ -100,5 +101,18 @@ it('shows SMS prices for a country', function (): void {
 
     $this->artisan('sendseven:sms-prices', ['country' => 'de'])
         ->expectsTable(['Country', 'ISO', 'Prefix', 'Per segment (EUR)', 'Supported'], [['Germany', 'DE', '49', '0.075', 'yes']])
+        ->assertSuccessful();
+});
+
+it('does not require a webhook secret from apps that handle webhooks themselves', function (): void {
+    Route::setRoutes(new RouteCollection);
+    config()->set('sendseven.webhooks.secret');
+    config()->set('cache.stores.redis', ['driver' => 'redis']);
+    config()->set('sendseven.rate_limit.store', 'redis');
+    accountFake();
+
+    $this->artisan('sendseven:doctor')
+        ->expectsOutputToContain('Webhook route')
+        ->doesntExpectOutputToContain('SENDSEVEN_WEBHOOK_SECRET')
         ->assertSuccessful();
 });
