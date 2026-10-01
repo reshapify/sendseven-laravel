@@ -6,6 +6,7 @@ namespace Reshapify\SendSeven\Laravel\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Arr;
 use Reshapify\SendSeven\Client;
 use Reshapify\SendSeven\Exceptions\SendSevenException;
 use Reshapify\SendSeven\Webhooks\EventType;
@@ -96,7 +97,7 @@ final class RegisterWebhookCommand extends Command
      */
     private function events(): array
     {
-        $events = array_values(array_filter($this->option('event'), is_string(...)));
+        $events = array_values(array_filter(Arr::wrap($this->option('event')), is_string(...)));
 
         if ($events !== []) {
             return $events;
