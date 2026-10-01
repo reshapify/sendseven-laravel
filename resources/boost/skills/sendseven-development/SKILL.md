@@ -50,7 +50,7 @@ final class StoreInboundMessage implements ShouldQueue
 
 Other events: `MessageStatusUpdated` (`failed()`, `message->errorCode()`), `MessageReactionChanged`, `ChannelEvent`, `ContactEvent`, `ConversationEvent`, `UnknownEvent`. `Reshapify\SendSeven\Laravel\Events\WebhookReceived` carries every delivery plus the route parameters. `ChannelConnected` fires on `channel.created`.
 
-Set up with `php artisan sendseven:webhooks:register` (prints `SENDSEVEN_WEBHOOK_SECRET`) and check everything with `php artisan sendseven:doctor`.
+Set up with `php artisan sendseven:webhooks:register` (prints `SENDSEVEN_WEBHOOK_SECRET`) and check everything with `php artisan sendseven:doctor`. When messages stop arriving: `sendseven:webhooks:list` (is it suspended?), `sendseven:webhooks:deliveries --status=failed` (what did the app answer?), then `sendseven:webhooks:activate` and `sendseven:webhooks:retry <delivery>`.
 
 ## Customers connecting channels
 

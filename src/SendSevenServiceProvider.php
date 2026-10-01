@@ -11,6 +11,15 @@ use Reshapify\SendSeven\Client;
 use Reshapify\SendSeven\Laravel\Commands\DoctorCommand;
 use Reshapify\SendSeven\Laravel\Commands\RegisterWebhookCommand;
 use Reshapify\SendSeven\Laravel\Commands\SmsPricesCommand;
+use Reshapify\SendSeven\Laravel\Commands\Webhooks\ActivateWebhookCommand;
+use Reshapify\SendSeven\Laravel\Commands\Webhooks\DeleteWebhookCommand;
+use Reshapify\SendSeven\Laravel\Commands\Webhooks\ListWebhooksCommand;
+use Reshapify\SendSeven\Laravel\Commands\Webhooks\RetryWebhookDeliveryCommand;
+use Reshapify\SendSeven\Laravel\Commands\Webhooks\RotateWebhookSecretCommand;
+use Reshapify\SendSeven\Laravel\Commands\Webhooks\ShowWebhookCommand;
+use Reshapify\SendSeven\Laravel\Commands\Webhooks\TestWebhookCommand;
+use Reshapify\SendSeven\Laravel\Commands\Webhooks\UpdateWebhookCommand;
+use Reshapify\SendSeven\Laravel\Commands\Webhooks\WebhookDeliveriesCommand;
 use Reshapify\SendSeven\Laravel\Webhooks\VerifyWebhookSignature;
 use Reshapify\SendSeven\Laravel\Webhooks\WebhookController;
 use Reshapify\SendSeven\Laravel\Webhooks\WebhookSecretResolver;
@@ -33,7 +42,20 @@ final class SendSevenServiceProvider extends PackageServiceProvider
         $package
             ->name('sendseven')
             ->hasConfigFile()
-            ->hasCommands(DoctorCommand::class, RegisterWebhookCommand::class, SmsPricesCommand::class);
+            ->hasCommands(
+                DoctorCommand::class,
+                SmsPricesCommand::class,
+                RegisterWebhookCommand::class,
+                ListWebhooksCommand::class,
+                ShowWebhookCommand::class,
+                WebhookDeliveriesCommand::class,
+                RetryWebhookDeliveryCommand::class,
+                TestWebhookCommand::class,
+                ActivateWebhookCommand::class,
+                UpdateWebhookCommand::class,
+                RotateWebhookSecretCommand::class,
+                DeleteWebhookCommand::class,
+            );
     }
 
     public function packageRegistered(): void

@@ -163,8 +163,22 @@ $this->postSendSevenWebhook('/webhooks/sendseven', $this->sendSevenWebhookPayloa
 | Command | Does |
 |---|---|
 | `sendseven:doctor` | Checks the token, plan, tenancy, webhook secret and endpoint, and the rate-limit store |
-| `sendseven:webhooks:register {url?}` | Creates the endpoint, prints its secret, confirms verification |
 | `sendseven:sms-prices {country?}` | SMS prices per segment |
+
+**Webhook endpoints.** Leave out `id` to act on the endpoint behind `Route::sendSevenWebhooks()`, or on the only one there is.
+
+| Command | When you need it |
+|---|---|
+| `sendseven:webhooks:register {url?}` | Setting up: creates the endpoint, prints its secret once, confirms verification |
+| `sendseven:webhooks:list` | Every endpoint with its state (active, suspended, unverified, inactive) and last error |
+| `sendseven:webhooks:show {id?}` | One endpoint in detail |
+| `sendseven:webhooks:deliveries {id?} {--status=failed}` | Messages aren't arriving: what SendSeven sent, and what your app answered |
+| `sendseven:webhooks:retry {delivery} {id?}` | Re-send a delivery your app missed |
+| `sendseven:webhooks:test {id?}` | Check the app accepts a delivery end to end |
+| `sendseven:webhooks:activate {id?}` | After an outage: SendSeven suspends endpoints after repeated failures |
+| `sendseven:webhooks:update {id?} {--url=} {--event=*} {--name=}` | The URL or events changed |
+| `sendseven:webhooks:rotate {id?}` | A secret leaked: new secret, printed once (asks first) |
+| `sendseven:webhooks:delete {id?}` | Remove an endpoint (asks first) |
 
 ## For AI agents
 

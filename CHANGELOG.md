@@ -2,6 +2,10 @@
 
 All notable changes to `reshapify/sendseven-laravel` are documented here.
 
+## 0.2.0 - 2026-10-01
+
+- Webhook endpoint commands: `sendseven:webhooks:list`, `show`, `deliveries`, `retry`, `test`, `activate`, `update`, `rotate` and `delete`. Without an ID they act on the endpoint behind `Route::sendSevenWebhooks()`, or the only one there is.
+
 ## 0.1.1 - 2026-10-01
 
 - `sendseven:doctor` no longer fails on a missing webhook secret when the app doesn't use `Route::sendSevenWebhooks()` and handles webhooks itself.
