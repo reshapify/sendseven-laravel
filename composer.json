@@ -1,6 +1,6 @@
 {
-    "name": "reshapify/laravel-sendseven",
-    "description": "SendSeven for Laravel: configured client, verified webhooks as Laravel events, channel onboarding redirects, a shared rate limit and a doctor command.",
+    "name": "reshapify/sendseven-laravel",
+    "description": "Unofficial. SendSeven for Laravel: configured client, verified webhooks as Laravel events, channel onboarding redirects, a shared rate limit and a doctor command.",
     "keywords": [
         "sendseven",
         "laravel",
@@ -9,7 +9,7 @@
         "webhooks",
         "messaging"
     ],
-    "homepage": "https://github.com/reshapify/laravel-sendseven",
+    "homepage": "https://github.com/reshapify/sendseven-laravel",
     "license": "MIT",
     "authors": [
         {
@@ -18,9 +18,13 @@
             "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/reshapify/sendseven-laravel/issues",
+        "source": "https://github.com/reshapify/sendseven-laravel",
+        "security": "https://github.com/reshapify/sendseven-laravel/security/policy"
+    },
     "require": {
         "php": "^8.3",
-        "guzzlehttp/guzzle": "^7.8",
         "illuminate/cache": "^12.0||^13.0",
         "illuminate/console": "^12.0||^13.0",
         "illuminate/contracts": "^12.0||^13.0",

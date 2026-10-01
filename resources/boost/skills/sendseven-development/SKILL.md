@@ -1,6 +1,6 @@
 ---
 name: sendseven-development
-description: Use when sending messages through SendSeven (WhatsApp, SMS, email, Telegram, Messenger, Instagram, RCS, browser push), handling SendSeven webhooks, letting customers connect channels (WhatsApp Embedded Signup via connect links), working with SendSeven tenants, or testing any of these in a Laravel app using reshapify/laravel-sendseven.
+description: Use when sending messages through SendSeven (WhatsApp, SMS, email, Telegram, Messenger, Instagram, RCS, browser push), handling SendSeven webhooks, letting customers connect channels (WhatsApp Embedded Signup via connect links), working with SendSeven tenants, or testing any of these in a Laravel app using reshapify/sendseven-laravel.
 ---
 
 # SendSeven in Laravel

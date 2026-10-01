@@ -1,5 +1,7 @@
 # SendSeven for Laravel
 
+> Unofficial. Not affiliated with or endorsed by SendSeven GmbH or Laravel Holdings.
+
 Laravel integration for [`reshapify/sendseven`](https://github.com/reshapify/sendseven-php), the typed SDK for the [SendSeven](https://sendseven.com) messaging API (WhatsApp, SMS, email, Telegram, Messenger, Instagram, RCS, browser push).
 
 - **Configured client:** the `SendSeven` facade, or inject `Reshapify\SendSeven\Client`.
@@ -12,9 +14,11 @@ Laravel integration for [`reshapify/sendseven`](https://github.com/reshapify/sen
 ## Install
 
 ```bash
-composer require reshapify/laravel-sendseven
+composer require reshapify/sendseven-laravel
 php artisan vendor:publish --tag=sendseven-config   # optional
 ```
+
+Composer may ask whether to trust `php-http/discovery`, a plugin of the core SDK. Laravel already ships an HTTP client, so answering "no" is fine.
 
 ```dotenv
 SENDSEVEN_API_TOKEN=s7_api_...
@@ -130,6 +134,10 @@ With a partner token, `rate_limit.tenant_share` stops one busy tenant from starv
 
 ## Testing
 
+SendSeven traffic goes through Laravel's HTTP client, so `Http::fake()`, `Http::preventStrayRequests()` and `Http::assertSent()` already cover it. Set `SENDSEVEN_MAX_ATTEMPTS=1` in `phpunit.xml` so faked 5xx responses aren't retried.
+
+Or script SendSeven's responses by endpoint:
+
 ```php
 $fake = SendSeven::fake([
     'POST /messages' => ['id' => 'msg_1', 'direction' => 'outbound', 'message_type' => 'text', 'status' => 'queued', 'created_at' => '2026-10-01T09:00:00Z'],
@@ -160,8 +168,12 @@ $this->postSendSevenWebhook('/webhooks/sendseven', $this->sendSevenWebhookPayloa
 
 ## For AI agents
 
-With [Laravel Boost](https://github.com/laravel/boost), `php artisan boost:install` picks up this package's guidelines and its `sendseven-development` skill. Without it, point your agent at `vendor/reshapify/laravel-sendseven/resources/boost/skills/sendseven-development/SKILL.md`.
+With [Laravel Boost](https://github.com/laravel/boost), `php artisan boost:install` picks up this package's guidelines and its `sendseven-development` skill. Without it, point your agent at `vendor/reshapify/sendseven-laravel/resources/boost/skills/sendseven-development/SKILL.md`.
+
+## Security
+
+Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
 
 ## License
 
-MIT. Not an official SendSeven package.
+MIT. Unofficial: not affiliated with or endorsed by SendSeven GmbH or Laravel Holdings. "SendSeven" and "Laravel" are trademarks of their owners and are used only to say what this package works with.

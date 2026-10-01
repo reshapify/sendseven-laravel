@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Http;
 use Reshapify\SendSeven\Laravel\Facades\SendSeven;
 use Reshapify\SendSeven\Laravel\Tests\TestCase;
 use Reshapify\SendSeven\Testing\Fake;
 
-uses(TestCase::class)->in(__DIR__);
+uses(TestCase::class)
+    ->beforeEach(fn () => Http::preventStrayRequests())
+    ->in(__DIR__);
 
 /**
  * Shapes captured from the live API on 1 Oct 2026, with IDs replaced.

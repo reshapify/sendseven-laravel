@@ -28,9 +28,10 @@ final class SendSeven extends Facade
 {
     /**
      * A client for another token, e.g. a customer's own, with the same
-     * configuration (retries, shared rate limit, base URI).
+     * configuration (retries, shared rate limit, HTTP client). Pass a base
+     * URI only if this token belongs to a different SendSeven environment.
      */
-    public static function forToken(#[SensitiveParameter] string $token, ?string $tenantId = null): Client
+    public static function forToken(#[SensitiveParameter] string $token, ?string $tenantId = null, ?string $baseUri = null): Client
     {
         $factory = self::getFacadeApplication()?->make(ClientFactory::class);
 
@@ -38,7 +39,7 @@ final class SendSeven extends Facade
             throw new RuntimeException('The SendSeven service provider is not registered.');
         }
 
-        return $factory->make($token, $tenantId);
+        return $factory->make($token, $tenantId, $baseUri);
     }
 
     /**

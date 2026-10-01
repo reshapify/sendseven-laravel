@@ -19,7 +19,7 @@ final readonly class ClientFactory
 {
     public function __construct(private Config $config, private CacheFactory $cache) {}
 
-    public function make(#[SensitiveParameter] ?string $token = null, ?string $tenantId = null): Client
+    public function make(#[SensitiveParameter] ?string $token = null, ?string $tenantId = null, ?string $baseUri = null): Client
     {
         $token ??= $this->string('sendseven.token');
 
@@ -29,7 +29,10 @@ final readonly class ClientFactory
 
         $factory = SendSeven::factory()
             ->withToken($token)
-            ->withBaseUri($this->string('sendseven.base_uri') ?? SendSeven::BASE_URI)
+            ->withTransport(new LaravelHttpTransport(
+                $baseUri ?? $this->string('sendseven.base_uri') ?? SendSeven::BASE_URI,
+                $this->int('sendseven.timeout_seconds', 30),
+            ))
             ->withTenant($tenantId ?? $this->string('sendseven.tenant_id'))
             ->withRetries($this->int('sendseven.retries.max_attempts', 3))
             ->withSleeper(new LaravelSleeper);

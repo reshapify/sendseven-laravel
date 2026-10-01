@@ -23,6 +23,12 @@ return [
     'base_uri' => env('SENDSEVEN_BASE_URI', SendSeven::BASE_URI),
 
     /*
+    | Requests go through Laravel's HTTP client, so Http::fake() and
+    | Http::preventStrayRequests() cover them in tests.
+    */
+    'timeout_seconds' => (int) env('SENDSEVEN_TIMEOUT', 30),
+
+    /*
     | Attempts per request, including the first. Rate limits, server errors
     | and network failures are retried; writes only with an idempotency key,
     | which the SDK adds automatically.
