@@ -1,0 +1,12 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+
+parameters:
+    level: max
+    paths:
+        - src
+    tmpDir: build/phpstan
+    ignoreErrors:
+        # Used by the application's tests, not by this package's source.
+        - identifier: trait.unused
