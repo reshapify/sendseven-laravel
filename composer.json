@@ -44,17 +44,6 @@
         "phpstan/phpstan-strict-rules": "^2.0",
         "rector/rector": "^2.0"
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../sendseven-php",
-            "options": {
-                "versions": {
-                    "reshapify/sendseven": "0.1.0"
-                }
-            }
-        }
-    ],
     "autoload": {
         "psr-4": {
             "Reshapify\\SendSeven\\Laravel\\": "src"

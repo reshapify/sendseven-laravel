@@ -25,15 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Until reshapify/sendseven is on Packagist, composer.json path-requires it from ../sendseven-php.
-      - uses: actions/checkout@v7
-        with:
-          repository: reshapify/sendseven-php
-          path: sendseven-php
-
-      - name: Place the core SDK next to this package
-        run: mv sendseven-php ../sendseven-php
-
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -54,14 +45,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/checkout@v7
-        with:
-          repository: reshapify/sendseven-php
-          path: sendseven-php
-
-      - name: Place the core SDK next to this package
-        run: mv sendseven-php ../sendseven-php
 
       - uses: shivammathur/setup-php@v2
         with:
