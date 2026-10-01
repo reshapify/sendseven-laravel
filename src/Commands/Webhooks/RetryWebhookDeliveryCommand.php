@@ -27,7 +27,7 @@ final class RetryWebhookDeliveryCommand extends Command
                 return self::FAILURE;
             }
 
-            $retry = $sendseven->webhooks()->retryDelivery($endpoint->id, $this->argument('delivery'));
+            $retry = $sendseven->webhooks()->retryDelivery($endpoint->id, $this->text($this->argument('delivery')));
 
             if (! $retry->success) {
                 $this->components->error($retry->message);

@@ -27,7 +27,7 @@ final class DeleteWebhookCommand extends Command
                 return self::FAILURE;
             }
 
-            if (! $this->option('force') && ! $this->confirm("Delete the endpoint for {$endpoint->url}? SendSeven stops delivering to it.")) {
+            if ($this->option('force') !== true && ! $this->confirm("Delete the endpoint for {$endpoint->url}? SendSeven stops delivering to it.")) {
                 return self::FAILURE;
             }
 

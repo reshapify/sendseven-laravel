@@ -27,7 +27,7 @@ final class RotateWebhookSecretCommand extends Command
                 return self::FAILURE;
             }
 
-            if (! $this->option('force') && ! $this->confirm("SendSeven signs with the new secret straight away, so deliveries to {$endpoint->url} are rejected until the app has it. Rotate now?")) {
+            if ($this->option('force') !== true && ! $this->confirm("SendSeven signs with the new secret straight away, so deliveries to {$endpoint->url} are rejected until the app has it. Rotate now?")) {
                 return self::FAILURE;
             }
 

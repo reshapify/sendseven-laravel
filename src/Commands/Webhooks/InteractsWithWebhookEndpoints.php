@@ -63,6 +63,15 @@ trait InteractsWithWebhookEndpoints
     }
 
     /**
+     * An argument or option as text: '' when it isn't a string. Larastan types
+     * command input differently across versions; this reads the same under all.
+     */
+    private function text(mixed $value): string
+    {
+        return is_string($value) ? $value : '';
+    }
+
+    /**
      * Runs the command body, reporting a SendSeven refusal as a failure.
      *
      * @param  Closure(): int  $body
