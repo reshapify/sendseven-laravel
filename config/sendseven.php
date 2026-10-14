@@ -14,6 +14,13 @@ return [
     'token' => env('SENDSEVEN_API_TOKEN'),
 
     /*
+    | "api" talks to SendSeven. "log" sends nothing: every request is written
+    | to the log and answered with a placeholder, like Laravel's log mail
+    | driver, so local and preview environments run without a token.
+    */
+    'driver' => env('SENDSEVEN_DRIVER', 'api'),
+
+    /*
     | Act on another tenant (sub-account) by default. Leave empty unless the
     | token is a partner token: it needs multi-tenant management on the plan
     | and the tenants:manage grant.
@@ -38,6 +45,24 @@ return [
     ],
 
     /*
+    | SendSeven::fast(): a client for messages someone is waiting on (a login
+    | code, say), which gives up quickly instead of retrying.
+    */
+    'fast' => [
+        'timeout_seconds' => 10,
+        'max_attempts' => 1,
+    ],
+
+    /*
+    | SendSeven::contactIdForPhone() remembers the contact found (or created)
+    | for a phone number this long, saving a search on every send. 0 turns it off.
+    */
+    'contacts' => [
+        'cache_for_seconds' => 3600,
+        'cache_store' => env('SENDSEVEN_CONTACTS_CACHE_STORE'),
+    ],
+
+    /*
     | SendSeven allows 100 standard requests a minute per token, shared by
     | every process using it. This keeps web requests, queue workers and
     | scheduled jobs inside one budget through the cache.
@@ -57,7 +82,7 @@ return [
         'tenant_share' => 1.0,
 
         // How long a request may wait for capacity before RateLimitExceeded is thrown.
-        // Keep it at 0 in web requests; queue jobs can catch the exception and release().
+        // Keep it at 0 in web requests; in queued jobs, add the ReleaseWhenRateLimited middleware.
         'max_wait_seconds' => 0,
     ],
 
@@ -71,12 +96,13 @@ return [
         'secret' => env('SENDSEVEN_WEBHOOK_SECRET'),
 
         // Optional: the static Authorization header the endpoint was registered with, checked as a second gate.
-        'authorization' => env('SENDSEVEN_WEBHOOK_AUTHORIZATION'),
+        // SENDSEVEN_WEBHOOK_AUTH_HEADER is read too, the name apps commonly used before this package.
+        'authorization' => env('SENDSEVEN_WEBHOOK_AUTHORIZATION', env('SENDSEVEN_WEBHOOK_AUTH_HEADER')),
 
         // Reject deliveries whose timestamp is further than this from now (replay protection).
         'tolerance_seconds' => 300,
 
-        // Ignore redeliveries of an event already handled, for this long. 0 turns it off.
+        // Ignore redeliveries of an event, or of a received message, already handled, for this long. 0 turns it off.
         'deduplicate_for_seconds' => 86400,
 
         'cache_store' => env('SENDSEVEN_WEBHOOK_CACHE_STORE'),

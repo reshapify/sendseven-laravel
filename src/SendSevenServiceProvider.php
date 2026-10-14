@@ -66,6 +66,8 @@ final class SendSevenServiceProvider extends PackageServiceProvider
         $this->app->scoped(ClientFactory::class);
         $this->app->singleton(WebhookSecretResolver::class);
         $this->app->scoped(Client::class, static fn (Application $app): Client => $app->make(ClientFactory::class)->make());
+        $this->app->scoped(ClientFactory::FAST, static fn (Application $app): Client => $app->make(ClientFactory::class)->fast());
+        $this->app->scoped(ContactResolver::class);
     }
 
     public function packageBooted(): void

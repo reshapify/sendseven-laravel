@@ -14,11 +14,14 @@ use Reshapify\SendSeven\Laravel\Events\ChannelConnected;
 use Reshapify\SendSeven\Laravel\Events\WebhookReceived;
 use Reshapify\SendSeven\Webhooks\Events\ChannelEvent;
 use Reshapify\SendSeven\Webhooks\Events\Event;
+use Reshapify\SendSeven\Webhooks\Events\MessageReceived;
 use Reshapify\SendSeven\Webhooks\EventType;
 use Throwable;
 
 /**
- * Turns a verified delivery into Laravel events, once per event ID:
+ * Turns a verified delivery into Laravel events, once per event ID (and,
+ * for received messages, once per message ID, since SendSeven can send the
+ * same message under two event IDs):
  *
  * - WebhookReceived, with the route parameters, for every delivery;
  * - the SDK's typed event itself (MessageReceived, MessageStatusUpdated,
@@ -40,9 +43,18 @@ final readonly class WebhookController
     {
         $event = VerifyWebhookSignature::event($request);
         $deduplication = $this->deduplication($cache, $config, $event);
+        $claimed = [];
 
-        if ($deduplication !== null && ! $deduplication['store']->add($deduplication['key'], true, $deduplication['seconds'])) {
-            return new JsonResponse(['received' => true, 'duplicate' => true]);
+        if ($deduplication !== null) {
+            foreach ($deduplication['keys'] as $key) {
+                if (! $deduplication['store']->add($key, true, $deduplication['seconds'])) {
+                    $this->forget($deduplication['store'], $claimed);
+
+                    return new JsonResponse(['received' => true, 'duplicate' => true]);
+                }
+
+                $claimed[] = $key;
+            }
         }
 
         /** @var array<string, mixed> $parameters */
@@ -56,9 +68,7 @@ final readonly class WebhookController
                 $events->dispatch(new ChannelConnected($event, $parameters));
             }
         } catch (Throwable $throwable) {
-            if ($deduplication !== null) {
-                $deduplication['store']->forget($deduplication['key']);
-            }
+            $this->forget($deduplication['store'] ?? null, $claimed);
 
             throw $throwable;
         }
@@ -67,7 +77,17 @@ final readonly class WebhookController
     }
 
     /**
-     * @return array{store: Repository, key: string, seconds: int}|null
+     * @param  list<string>  $keys
+     */
+    private function forget(?Repository $store, array $keys): void
+    {
+        foreach ($keys as $key) {
+            $store?->forget($key);
+        }
+    }
+
+    /**
+     * @return array{store: Repository, keys: list<string>, seconds: int}|null
      */
     private function deduplication(CacheFactory $cache, Config $config, Event $event): ?array
     {
@@ -78,10 +98,15 @@ final readonly class WebhookController
         }
 
         $store = $config->get('sendseven.webhooks.cache_store');
+        $keys = ["sendseven:webhooks:{$event->id}"];
+
+        if ($event instanceof MessageReceived && $event->message->id !== '') {
+            $keys[] = "sendseven:webhooks:message:{$event->message->id}";
+        }
 
         return [
             'store' => $cache->store(is_string($store) ? $store : null),
-            'key' => "sendseven:webhooks:{$event->id}",
+            'keys' => $keys,
             'seconds' => (int) $seconds,
         ];
     }

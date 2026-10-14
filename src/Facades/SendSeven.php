@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Facade;
 use Reshapify\SendSeven\Client;
 use Reshapify\SendSeven\Laravel\ClientFactory;
 use Reshapify\SendSeven\Laravel\ConnectRedirect;
+use Reshapify\SendSeven\Laravel\ContactResolver;
 use Reshapify\SendSeven\Laravel\Webhooks\WebhookSecretResolver;
 use Reshapify\SendSeven\Onboarding\ConnectLink;
 use Reshapify\SendSeven\Testing\Fake;
@@ -40,6 +41,38 @@ final class SendSeven extends Facade
         }
 
         return $factory->make($token, $tenantId, $baseUri);
+    }
+
+    /**
+     * The client for messages someone is waiting on, such as a login code:
+     * a short timeout and no retries (sendseven.fast), so a slow API fails
+     * fast and the app can offer another way in. Faked along with the default.
+     */
+    public static function fast(): Client
+    {
+        $client = self::getFacadeApplication()?->make(ClientFactory::FAST);
+
+        if (! $client instanceof Client) {
+            throw new RuntimeException('The SendSeven service provider is not registered.');
+        }
+
+        return $client;
+    }
+
+    /**
+     * The ID of the contact with this phone number, created if there is none.
+     * Remembered for sendseven.contacts.cache_for_seconds. Pass the client
+     * and token when sending through SendSeven::forToken().
+     */
+    public static function contactIdForPhone(string $phone, ?string $name = null, ?Client $client = null, #[SensitiveParameter] ?string $token = null): string
+    {
+        $contacts = self::getFacadeApplication()?->make(ContactResolver::class);
+
+        if (! $contacts instanceof ContactResolver) {
+            throw new RuntimeException('The SendSeven service provider is not registered.');
+        }
+
+        return $contacts->idForPhone($phone, $name, $client ?? self::client(), $token);
     }
 
     /**
@@ -85,6 +118,7 @@ final class SendSeven extends Facade
         $fake = new Fake($responses);
 
         self::swap($fake->client);
+        self::getFacadeApplication()?->instance(ClientFactory::FAST, $fake->client);
 
         return $fake;
     }

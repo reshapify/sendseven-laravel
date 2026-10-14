@@ -24,6 +24,8 @@ Composer may ask whether to trust `php-http/discovery`, a plugin of the core SDK
 SENDSEVEN_API_TOKEN=s7_api_...
 ```
 
+Locally, `SENDSEVEN_DRIVER=log` sends nothing and needs no token: requests are written to the log and answered with a placeholder, like Laravel's `log` mail driver.
+
 ## Send
 
 ```php
@@ -31,6 +33,16 @@ use Reshapify\SendSeven\Laravel\Facades\SendSeven;
 
 SendSeven::messages()->send(to: '+4915112345678', channelId: $channelId, text: 'Your order has shipped.');
 ```
+
+To send to a phone number, look its contact up once; the ID is cached for an hour (`contacts.cache_for_seconds`):
+
+```php
+$contactId = SendSeven::contactIdForPhone('+4915112345678');
+
+SendSeven::messages()->sendText(channelId: $channelId, text: 'Your order has shipped.', contactId: $contactId);
+```
+
+For messages someone is waiting on, such as a login code, `SendSeven::fast()` is the same client with a 10-second timeout and no retries, so the app can fall back to email quickly.
 
 Every SendSeven endpoint is available; see the [SDK docs](https://github.com/reshapify/sendseven-php#readme). For a customer's own token use `SendSeven::forToken($token)`; for a sub-account with a partner token use `SendSeven::forTenant($tenantId)`.
 
@@ -117,18 +129,20 @@ SendSeven runs Meta's Embedded Signup on its connect page; the SDK's [onboarding
 
 ## Rate limits
 
-SendSeven allows 100 standard requests a minute per token. The add-on counts every request in your cache (set `SENDSEVEN_RATE_LIMIT_STORE` to a store all processes share, like `redis`), keeps 10% headroom, and pauses everyone when SendSeven answers 429. When the minute's budget is spent it throws `RateLimitExceeded` instead of sending:
+SendSeven allows 100 standard requests a minute per token. The add-on counts every request in your cache (set `SENDSEVEN_RATE_LIMIT_STORE` to a store all processes share, like `redis`), keeps 10% headroom, and pauses everyone when SendSeven answers 429. When the minute's budget is spent it throws `RateLimitExceeded` instead of sending.
+
+In queued jobs, the `ReleaseWhenRateLimited` middleware puts the job back on the queue until there is capacity, whether the shared budget ran out or SendSeven answered 429:
 
 ```php
-public function handle(): void
+use Reshapify\SendSeven\Laravel\Queue\ReleaseWhenRateLimited;
+
+public function middleware(): array
 {
-    try {
-        SendSeven::messages()->send(...);
-    } catch (RateLimitExceeded $exception) {
-        $this->release($exception->retryAfter());
-    }
+    return [new ReleaseWhenRateLimited];
 }
 ```
+
+Releases count as attempts, so give such jobs room with `$tries` or `retryUntil()`.
 
 With a partner token, `rate_limit.tenant_share` stops one busy tenant from starving the others.
 
@@ -147,6 +161,8 @@ $this->post('/orders/1/ship');
 
 $fake->assertSent('POST /messages', fn ($request) => $request->body['to'] === '+4915112345678');
 ```
+
+`SendSeven::fake()` also replaces `SendSeven::fast()`.
 
 Webhooks, signed as SendSeven signs them:
 

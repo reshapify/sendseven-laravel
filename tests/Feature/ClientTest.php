@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Reshapify\SendSeven\Client;
 use Reshapify\SendSeven\Enums\ChannelType;
+use Reshapify\SendSeven\Exceptions\ApiException;
 use Reshapify\SendSeven\Http\Request;
 use Reshapify\SendSeven\Laravel\ConnectRedirect;
 use Reshapify\SendSeven\Laravel\Exceptions\MissingConfiguration;
@@ -75,4 +78,41 @@ it('sends Inertia visits to the connect page as a full page load', function (): 
 
     expect($response->getStatusCode())->toBe(409)
         ->and($response->headers->get('X-Inertia-Location'))->toBe('https://app.sendseven.com/connect/s7_cc_a1b2');
+});
+
+it('logs requests instead of sending them with the log driver', function (): void {
+    config()->set('sendseven.driver', 'log');
+    config()->set('sendseven.token');
+    Http::preventStrayRequests();
+    Log::spy();
+
+    $message = app(Client::class)->messages()->sendText(channelId: 'ch_1', text: 'Hi', contactId: 'ct_1');
+
+    expect($message->id)->toStartWith('log_');
+    Log::shouldHaveReceived('info')->withArgs(fn (string $message): bool => $message === 'SendSeven (log driver): POST /messages')->once();
+});
+
+it('builds a fast client that gives up after one attempt', function (): void {
+    config()->set('sendseven.fast.max_attempts', 1);
+    Http::fake(['*' => Http::response(['error' => 'Unavailable'], 503)]);
+
+    expect(fn (): Reshapify\SendSeven\Data\Message => SendSeven::fast()->messages()->sendText(channelId: 'ch_1', text: '123456', contactId: 'ct_1'))->toThrow(ApiException::class);
+    Http::assertSentCount(1);
+});
+
+it('fakes the fast client along with the default one', function (): void {
+    $fake = SendSeven::fake();
+
+    expect(SendSeven::fast())->toBe($fake->client);
+});
+
+it('remembers the contact found for a phone number', function (): void {
+    $fake = SendSeven::fake([
+        'GET /contacts' => ['items' => [['id' => 'ct_1', 'phone' => '+44 7700 900123']], 'pagination' => ['total' => 1, 'page' => 1, 'page_size' => 20, 'total_pages' => 1, 'has_next' => false, 'has_prev' => false]],
+    ]);
+
+    expect(SendSeven::contactIdForPhone('+447700900123'))->toBe('ct_1')
+        ->and(SendSeven::contactIdForPhone('+44 7700 900123'))->toBe('ct_1');
+
+    $fake->assertSentCount(1, 'GET /contacts');
 });

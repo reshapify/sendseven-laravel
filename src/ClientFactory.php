@@ -6,6 +6,7 @@ namespace Reshapify\SendSeven\Laravel;
 
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Config\Repository as Config;
+use Psr\Log\LoggerInterface;
 use Reshapify\SendSeven\Client;
 use Reshapify\SendSeven\Laravel\Exceptions\MissingConfiguration;
 use Reshapify\SendSeven\SendSeven;
@@ -17,31 +18,52 @@ use SensitiveParameter;
  */
 final readonly class ClientFactory
 {
-    public function __construct(private Config $config, private CacheFactory $cache) {}
+    /**
+     * The container key of the fast client (SendSeven::fast()).
+     */
+    public const string FAST = 'sendseven.fast';
 
-    public function make(#[SensitiveParameter] ?string $token = null, ?string $tenantId = null, ?string $baseUri = null): Client
+    public function __construct(private Config $config, private CacheFactory $cache, private LoggerInterface $logger) {}
+
+    public function make(#[SensitiveParameter] ?string $token = null, ?string $tenantId = null, ?string $baseUri = null, ?int $timeoutSeconds = null, ?int $maxAttempts = null): Client
     {
-        $token ??= $this->string('sendseven.token');
+        $logging = $this->config->get('sendseven.driver') === 'log';
+        $token ??= $this->string('sendseven.token') ?? ($logging ? 'log' : null);
 
         if ($token === null) {
             throw MissingConfiguration::token();
         }
 
+        $transport = $logging
+            ? new LogTransport($this->logger)
+            : new LaravelHttpTransport(
+                $baseUri ?? $this->string('sendseven.base_uri') ?? SendSeven::BASE_URI,
+                $timeoutSeconds ?? $this->int('sendseven.timeout_seconds', 30),
+            );
+
         $factory = SendSeven::factory()
             ->withToken($token)
-            ->withTransport(new LaravelHttpTransport(
-                $baseUri ?? $this->string('sendseven.base_uri') ?? SendSeven::BASE_URI,
-                $this->int('sendseven.timeout_seconds', 30),
-            ))
+            ->withTransport($transport)
             ->withTenant($tenantId ?? $this->string('sendseven.tenant_id'))
-            ->withRetries($this->int('sendseven.retries.max_attempts', 3))
+            ->withRetries($maxAttempts ?? $this->int('sendseven.retries.max_attempts', 3))
             ->withSleeper(new LaravelSleeper);
 
-        if ($this->config->get('sendseven.rate_limit.enabled', true) === true) {
+        if (! $logging && $this->config->get('sendseven.rate_limit.enabled', true) === true) {
             $factory->withRateLimiter($this->rateLimiter($token));
         }
 
         return $factory->make();
+    }
+
+    /**
+     * The default client, tuned to give up quickly: see sendseven.fast.
+     */
+    public function fast(): Client
+    {
+        return $this->make(
+            timeoutSeconds: $this->int('sendseven.fast.timeout_seconds', 10),
+            maxAttempts: $this->int('sendseven.fast.max_attempts', 1),
+        );
     }
 
     private function rateLimiter(#[SensitiveParameter] string $token): CacheRateLimiter

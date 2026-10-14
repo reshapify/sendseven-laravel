@@ -91,6 +91,17 @@ it('handles a redelivered event only once', function (): void {
     Event::assertDispatchedTimes(MessageReceived::class, 1);
 });
 
+it('handles a message delivered under two event IDs only once', function (): void {
+    Event::fake();
+
+    $this->postSendSevenWebhook('/webhooks/sendseven', $this->sendSevenWebhookPayload('message.received', inboundMessage()))->assertOk();
+    $this->postSendSevenWebhook('/webhooks/sendseven', $this->sendSevenWebhookPayload('message.received', inboundMessage()))
+        ->assertOk()
+        ->assertJson(['duplicate' => true]);
+
+    Event::assertDispatchedTimes(MessageReceived::class, 1);
+});
+
 it('handles the redelivery of an event whose listener failed', function (): void {
     $attempts = 0;
     Event::listen(MessageReceived::class, function () use (&$attempts): void {
@@ -127,6 +138,20 @@ it('announces a channel connected through a connect link', function (): void {
 
     Event::assertDispatched(ChannelConnected::class, fn (ChannelConnected $event): bool => $event->connectLinkId() === 'cct_9a8b7c6d' && $event->channel->id === 'ch_1');
     Event::assertDispatched(ChannelEvent::class);
+});
+
+it('reads the Authorization header from SENDSEVEN_WEBHOOK_AUTH_HEADER too', function (): void {
+    $_ENV['SENDSEVEN_WEBHOOK_AUTH_HEADER'] = 'Bearer legacy';
+    putenv('SENDSEVEN_WEBHOOK_AUTH_HEADER=Bearer legacy');
+
+    try {
+        $config = require __DIR__.'/../../config/sendseven.php';
+    } finally {
+        unset($_ENV['SENDSEVEN_WEBHOOK_AUTH_HEADER']);
+        putenv('SENDSEVEN_WEBHOOK_AUTH_HEADER');
+    }
+
+    expect($config['webhooks']['authorization'])->toBe('Bearer legacy');
 });
 
 it('checks the static Authorization header when one is configured', function (): void {

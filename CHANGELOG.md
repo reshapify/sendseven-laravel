@@ -2,6 +2,15 @@
 
 All notable changes to `reshapify/sendseven-laravel` are documented here.
 
+## 0.4.0 - 2026-10-13
+
+- `SENDSEVEN_DRIVER=log`: requests are logged and answered with a placeholder instead of sent, and no token is needed.
+- `SendSeven::fast()`: the default client with a short timeout and no retries (`sendseven.fast`), for messages someone is waiting on.
+- `SendSeven::contactIdForPhone()`: finds or creates the contact for a phone number and caches its ID per account (`sendseven.contacts`).
+- `Queue\ReleaseWhenRateLimited` job middleware: releases the job when the shared budget is spent or SendSeven answers 429.
+- Webhooks: a received message is handled once per message ID as well as per event ID, since SendSeven can deliver one message under two events.
+- `webhooks.authorization` also reads `SENDSEVEN_WEBHOOK_AUTH_HEADER`.
+
 ## 0.3.0 - 2026-10-13
 
 - Requires `reshapify/sendseven` ^0.2, which adds `sendText()`, `sendButtons()`, `sendList()`, `contacts()->findOrCreateByPhone()` and webhook message helpers (`images()`, `location()`, `typedText()`, broader `buttonReply()`).
