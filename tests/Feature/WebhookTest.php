@@ -91,6 +91,22 @@ it('handles a redelivered event only once', function (): void {
     Event::assertDispatchedTimes(MessageReceived::class, 1);
 });
 
+it('handles the redelivery of an event whose listener failed', function (): void {
+    $attempts = 0;
+    Event::listen(MessageReceived::class, function () use (&$attempts): void {
+        if (++$attempts === 1) {
+            throw new RuntimeException('Database unavailable');
+        }
+    });
+    $payload = $this->sendSevenWebhookPayload('message.received', inboundMessage());
+
+    $this->withoutExceptionHandling();
+    expect(fn () => $this->postSendSevenWebhook('/webhooks/sendseven', $payload))->toThrow(RuntimeException::class, 'Database unavailable');
+
+    $this->postSendSevenWebhook('/webhooks/sendseven', $payload)->assertOk()->assertJsonMissing(['duplicate' => true]);
+    expect($attempts)->toBe(2);
+});
+
 it('handles redeliveries again when deduplication is off', function (): void {
     Event::fake();
     config()->set('sendseven.webhooks.deduplicate_for_seconds', 0);

@@ -68,7 +68,7 @@ final class StoreInboundMessage implements ShouldQueue
 | `Reshapify\SendSeven\Laravel\Events\ChannelConnected` | A channel was created, e.g. through a connect link |
 | `Reshapify\SendSeven\Laravel\Events\WebhookReceived` | Every delivery, with the route parameters |
 
-Each event ID is handled once (configurable: `webhooks.deduplicate_for_seconds`).
+Each event ID is handled once (configurable: `webhooks.deduplicate_for_seconds`). If a listener throws, the event is forgotten and SendSeven gets an error, so its redelivery is handled rather than skipped. Listeners run during the request and SendSeven waits for the answer, so queue slow work.
 
 **An endpoint per customer?** Put a parameter in the URL and resolve its secret:
 

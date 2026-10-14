@@ -2,6 +2,12 @@
 
 All notable changes to `reshapify/sendseven-laravel` are documented here.
 
+## 0.3.0 - 2026-10-13
+
+- Requires `reshapify/sendseven` ^0.2, which adds `sendText()`, `sendButtons()`, `sendList()`, `contacts()->findOrCreateByPhone()` and webhook message helpers (`images()`, `location()`, `typedText()`, broader `buttonReply()`).
+- Fix: a delivery whose listener threw was remembered as handled, so SendSeven's redelivery was skipped as a duplicate and the event lost. The event is now forgotten when a listener throws.
+- Octane: `ClientFactory` is scoped, and the webhook controller and secret resolver read config per request, so a worker never keeps the first request's configuration.
+
 ## 0.2.1 - 2026-10-01
 
 - Static-analysis fix for newer Larastan; no behaviour change.

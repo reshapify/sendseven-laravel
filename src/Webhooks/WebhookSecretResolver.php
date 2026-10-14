@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Reshapify\SendSeven\Laravel\Webhooks;
 
 use Closure;
+use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Http\Request;
 use Reshapify\SendSeven\Laravel\Exceptions\MissingConfiguration;
@@ -17,8 +18,6 @@ final class WebhookSecretResolver
 {
     /** @var (Closure(Request): ?string)|null */
     private ?Closure $resolver = null;
-
-    public function __construct(private readonly Config $config) {}
 
     /**
      * @param  Closure(Request): ?string  $resolver  null when the endpoint is unknown (answered with 404)
@@ -46,7 +45,7 @@ final class WebhookSecretResolver
             return is_string($secret) && $secret !== '' ? $secret : null;
         }
 
-        $secret = $this->config->get('sendseven.webhooks.secret');
+        $secret = Container::getInstance()->make(Config::class)->get('sendseven.webhooks.secret');
 
         if (! is_string($secret) || $secret === '') {
             throw MissingConfiguration::webhookSecret();

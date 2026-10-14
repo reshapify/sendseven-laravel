@@ -60,7 +60,10 @@ final class SendSevenServiceProvider extends PackageServiceProvider
 
     public function packageRegistered(): void
     {
-        $this->app->singleton(ClientFactory::class);
+        // Scoped: under Octane each request gets its own config, which the
+        // factory reads. The resolver is a singleton because it holds the
+        // app's resolver closure, set once at boot; it reads config per call.
+        $this->app->scoped(ClientFactory::class);
         $this->app->singleton(WebhookSecretResolver::class);
         $this->app->scoped(Client::class, static fn (Application $app): Client => $app->make(ClientFactory::class)->make());
     }
