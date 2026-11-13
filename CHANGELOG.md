@@ -2,6 +2,10 @@
 
 All notable changes to `reshapify/sendseven-laravel` are documented here.
 
+## 0.4.1 - 2026-11-13
+
+- Accepts `reshapify/sendseven` ^0.3, which adds the Human Agent tag for Messenger and Instagram replies (`messages()->send(channelOptions: ['tag' => 'HUMAN_AGENT'])`) and `Conversation::$replyWindow`.
+
 ## 0.4.0 - 2026-10-13
 
 - `SENDSEVEN_DRIVER=log`: requests are logged and answered with a placeholder instead of sent, and no token is needed.
